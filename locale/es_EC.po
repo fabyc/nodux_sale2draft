@@ -1,0 +1,39 @@
+#
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:sale.draft_sale.start,id:"
+msgid "ID"
+msgstr "ID"
+
+msgctxt "field:sale.sale,invoice_number_deleted:"
+msgid "Invoice number deleted"
+msgstr "Número de factura eliminada"
+
+msgctxt "model:ir.action,name:wizard_draft_sale"
+msgid "Draft Sale"
+msgstr "Pasar a borrador"
+
+msgctxt "model:sale.draft_sale.start,name:"
+msgid "Draft Sale"
+msgstr "Pasar a borrador"
+
+msgctxt "view:sale.draft_sale.start:"
+msgid "Are you sure to draft those/this sale(s)?"
+msgstr "¿Está seguro que desea pasar a borrador esta(s) venta(s)?"
+
+msgctxt "view:sale.draft_sale.start:"
+msgid "Draft Sale"
+msgstr "Pasar a borradoor"
+
+msgctxt "wizard_button:sale.draft_sale,start,draft_:"
+msgid "Draft"
+msgstr "Borrador"
+
+msgctxt "wizard_button:sale.draft_sale,start,end:"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "wizard_button:sale.draft_sale,start,end:"
+msgid "Exit"
+msgstr "Salir"
