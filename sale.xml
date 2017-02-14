@@ -22,5 +22,22 @@ this repository contains the full copyright notices and license terms. -->
             <field name="action" ref="wizard_draft_sale"/>
         </record>
 
+        <!-- Group -->
+        <record model="res.group" id="group_sale_draft">
+            <field name="name">Nodux - Venta a Borrador</field>
+        </record>
+
+        <record model="res.user-res.group"
+            id="user_admin_group_sale_draft">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_sale_draft"/>
+        </record>
+
+        <record model="res.user-res.group"
+            id="user_trigger_group_sale_draft">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_sale_draft"/>
+        </record>
+
     </data>
 </tryton>

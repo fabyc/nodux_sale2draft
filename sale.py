@@ -43,7 +43,6 @@ class Sale():
                 cls.process([sale])
             if not sale.invoices and sale.invoice_method == 'order':
                 cls.raise_user_error('not_customer_invoice')
-            print "Aqui genera la factura nodux_sale3 "
             grouping = getattr(sale.party, 'sale_invoice_grouping_method',
                 False)
             if sale.invoices and not grouping:
@@ -91,27 +90,51 @@ class DraftSale(Wizard):
         Sale = pool.get('sale.sale')
         Invoice = pool.get('account.invoice')
         sales = Sale.browse(Transaction().context['active_ids'])
-        for s in sales:
-            sale = s
-            invoices= Invoice.search([('description', '=', sale.reference)])
-            sale.state = 'draft'
-            cursor = Transaction().cursor
-            for i in invoices:
-                if i.estado_sri == 'AUTORIZADO':
-                    self.raise_user_error('No puede reversar una factura que se encuentra autorizada por el SRI')
+        ModelData = pool.get('ir.model.data')
+        User = pool.get('res.user')
+        Group = pool.get('res.group')
+
+        def in_group():
+            origin = str(sales)
+            group = Group(ModelData.get_id('nodux_sale2draft',
+                    'group_sale_draft'))
+            transaction = Transaction()
+
+            user_id = transaction.user
+            if user_id == 0:
+                user_id = transaction.context.get('user', user_id)
+            if user_id == 0:
+                return True
+            user = User(user_id)
+            return origin and group in user.groups
+
+        for sale in sales:
+            if sale.state == 'draft':
+                pass
+            else:
+                if not in_group():
+                    self.raise_user_error('No tiene permiso para reversar la venta %s', sale.id)
                 else:
-                    cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
-                    cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
-                    for line in i.lines:
-                        cursor.execute('DELETE FROM account_invoice_line WHERE id = %s' %line.id)
-                    cursor.execute('DELETE FROM account_invoice WHERE id = %s' %i.id)
-                    sale.invoice_number_deleted = i.number
-                    for payment in sale.payments:
-                        cursor.execute('DELETE FROM account_statement_line WHERE id = %s' %payment.id)
-                    for move in sale.moves:
-                        cursor.execute('DELETE FROM stock_move WHERE id = %s' % move.id)
-                    sale.invoice_state = 'none'
-                    sale.shipment_state = 'none'
-                    sale.description = None
-                    sale.reference = None
-                    sale.save()
+                    invoices= Invoice.search([('description', '=', sale.reference)])
+                    sale.state = 'draft'
+                    cursor = Transaction().cursor
+                    for i in invoices:
+                        if i.estado_sri == 'AUTORIZADO':
+                            self.raise_user_error('No puede reversar una factura que se encuentra autorizada por el SRI')
+
+                        else:
+                            cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
+                            cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
+                            for line in i.lines:
+                                cursor.execute('DELETE FROM account_invoice_line WHERE id = %s' %line.id)
+                            cursor.execute('DELETE FROM account_invoice WHERE id = %s' %i.id)
+                            sale.invoice_number_deleted = i.number
+                            for payment in sale.payments:
+                                cursor.execute('DELETE FROM account_statement_line WHERE id = %s' %payment.id)
+                            for move in sale.moves:
+                                cursor.execute('DELETE FROM stock_move WHERE id = %s' % move.id)
+                            sale.invoice_state = 'none'
+                            sale.shipment_state = 'none'
+                            sale.description = None
+                            sale.reference = None
+                            sale.save()
