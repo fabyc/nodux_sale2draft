@@ -60,6 +60,7 @@ class Sale():
                 for payment in sale.payments:
                     invoice = sale.invoices[0]
                     payment.invoice = invoice.id
+                    payment.description = sale.reference
                     # Because of account_invoice_party_without_vat module
                     # could be installed, invoice party may be different of
                     # payment party if payment party has not any vat
