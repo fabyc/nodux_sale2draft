@@ -124,6 +124,7 @@ class DraftSale(Wizard):
                             self.raise_user_error('No puede reversar una factura que se encuentra autorizada por el SRI')
 
                         else:
+                            cursor.execute('DELETE FROM account_invoice_tax WHERE invoice = %s' %i.id)
                             cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
                             cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
                             for line in i.lines:
