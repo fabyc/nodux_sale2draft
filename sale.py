@@ -94,6 +94,8 @@ class DraftSale(Wizard):
         ModelData = pool.get('ir.model.data')
         User = pool.get('res.user')
         Group = pool.get('res.group')
+        Module = pool.get('ir.module.module')
+        moduleS = Module.search([('name', '=', 'nodux_sale_lot'), ('state', '=', 'installed')])
 
         def in_group():
             origin = str(sales)
@@ -118,25 +120,49 @@ class DraftSale(Wizard):
                 else:
                     invoices= Invoice.search([('description', '=', sale.reference)])
                     sale.state = 'draft'
+                    for line in sale.lines:
+                        if moduleS:
+                            if line.lote.lot:
+                                lot = line.lote.lot
+                                lot.used_lot = 'no_used'
+                                lot.save()
+
                     cursor = Transaction().cursor
                     for i in invoices:
-                        if i.estado_sri == 'AUTORIZADO':
-                            self.raise_user_error('No puede reversar una factura que se encuentra autorizada por el SRI')
+                        cursor.execute('DELETE FROM account_invoice_tax WHERE invoice = %s' %i.id)
+                        cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
+                        cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
+                        for line in i.lines:
+                            cursor.execute('DELETE FROM account_invoice_line WHERE id = %s' %line.id)
+                        cursor.execute('DELETE FROM account_invoice WHERE id = %s' %i.id)
+                        sale.invoice_number_deleted = i.number
+                        for payment in sale.payments:
+                            cursor.execute('DELETE FROM account_statement_line WHERE id = %s' %payment.id)
+                        for move in sale.moves:
+                            cursor.execute('DELETE FROM stock_move WHERE id = %s' % move.id)
+                        sale.invoice_state = 'none'
+                        sale.shipment_state = 'none'
+                        sale.description = None
+                        sale.reference = None
+                        sale.save()
 
-                        else:
-                            cursor.execute('DELETE FROM account_invoice_tax WHERE invoice = %s' %i.id)
-                            cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
-                            cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
-                            for line in i.lines:
-                                cursor.execute('DELETE FROM account_invoice_line WHERE id = %s' %line.id)
-                            cursor.execute('DELETE FROM account_invoice WHERE id = %s' %i.id)
-                            sale.invoice_number_deleted = i.number
-                            for payment in sale.payments:
-                                cursor.execute('DELETE FROM account_statement_line WHERE id = %s' %payment.id)
-                            for move in sale.moves:
-                                cursor.execute('DELETE FROM stock_move WHERE id = %s' % move.id)
-                            sale.invoice_state = 'none'
-                            sale.shipment_state = 'none'
-                            sale.description = None
-                            sale.reference = None
-                            sale.save()
+                        # if i.estado_sri == 'AUTORIZADO':
+                        #     self.raise_user_error('No puede reversar una factura que se encuentra autorizada por el SRI')
+                        #
+                        # else:
+                        #     cursor.execute('DELETE FROM account_invoice_tax WHERE invoice = %s' %i.id)
+                        #     cursor.execute('DELETE FROM account_move_line WHERE move = %s' %i.move.id)
+                        #     cursor.execute('DELETE FROM account_move WHERE id = %s' %i.move.id)
+                        #     for line in i.lines:
+                        #         cursor.execute('DELETE FROM account_invoice_line WHERE id = %s' %line.id)
+                        #     cursor.execute('DELETE FROM account_invoice WHERE id = %s' %i.id)
+                        #     sale.invoice_number_deleted = i.number
+                        #     for payment in sale.payments:
+                        #         cursor.execute('DELETE FROM account_statement_line WHERE id = %s' %payment.id)
+                        #     for move in sale.moves:
+                        #         cursor.execute('DELETE FROM stock_move WHERE id = %s' % move.id)
+                        #     sale.invoice_state = 'none'
+                        #     sale.shipment_state = 'none'
+                        #     sale.description = None
+                        #     sale.reference = None
+                        #     sale.save()
