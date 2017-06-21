@@ -124,9 +124,10 @@ class DraftSale(Wizard):
                         if moduleS:
                             if line.lot:
                                 for lote in line.lot:
-                                    lot = lote.lot
-                                    lot.used_lot = 'no_used'
-                                    lot.save()
+                                    if lote.lot:
+                                        lot = lote.lot
+                                        lot.used_lot = 'no_used'
+                                        lot.save()
 
                     cursor = Transaction().cursor
                     for i in invoices:
